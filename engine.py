@@ -1,4 +1,5 @@
 import numpy as np
+from itertools import combinations
 
 #I was thinking of representing the cards as numbers, with N%10 = 0 => A, N%10 = 1 => K, N%10 = 2 =>Q
 #N/10 = 0 => Spades, N/10 = 1 => Hearts, N/10 = 2 => Diamonds, N/10 = 3 =>Clubs 
@@ -75,6 +76,9 @@ class Agent:
     def getName(self):
         return self.name
 
+    def printCards(self):
+        print(self.name + " has " + cardToName(self.cards[0]) + " and " + cardToName(self.cards[1]))
+
 def calculatePossibleOpponentHands(agentsCards, visibleCards, deck):
     possibleOpponentCards = []
 
@@ -92,6 +96,166 @@ def calculatePossibleOpponentHands(agentsCards, visibleCards, deck):
 
     return possibleOpponentCards
 
+def calculateBestHand(hand1, hand2, visibleCards):
+    #Quads > Trips > Two Pair > Pair > High Card
+
+    #N%10 = 0 => A, N%10 = 1 => K, N%10 = 2 =>Q
+    #N/10 = 0 => Spades, N/10 = 1 => Hearts, N/10 = 2 => Diamonds, N/10 = 3 =>Clubs 
+    #So 0 = Ace of Spades, 31 = King of Clubs, etc.
+    
+    #check combinations of 5 cards in hand + visible cards
+    hand1 = np.append(hand1, visibleCards)
+    hand2 = np.append(hand2, visibleCards)
+
+    hand_1_same_cards = -1
+    hand_2_same_cards = -1
+    value1 = -1
+    value2 = -1
+
+    for hand in combinations(hand1, 5):
+        
+        #check for quads
+        hand_freqs = [card % 10 for card in hand]
+
+        #convert to int 
+        hand_freqs = np.array(hand_freqs, dtype=int) 
+
+        hand_freqs = np.bincount(hand_freqs)
+        if 4 in hand_freqs:
+            if value1 > np.argmax(hand_freqs):
+                hand_1_same_cards = 4
+                value1 = np.argmax(hand_freqs)
+        elif 3 in hand_freqs:
+            if hand_1_same_cards < 3 or (hand_1_same_cards == 3 and value1 > np.argmax(hand_freqs)):
+                hand_1_same_cards = 3
+                value1 = np.argmax(hand_freqs)
+        elif 2 in hand_freqs:
+            if hand_1_same_cards < 2 or (hand_1_same_cards == 2 and value1 > np.argmax(hand_freqs)):
+                hand_1_same_cards = 2
+                value1 = np.argmax(hand_freqs)
+        else:
+            if hand_1_same_cards < 1 or (hand_1_same_cards == 1 and value1 > np.argmax(hand_freqs)):
+                hand_1_same_cards = 1
+                value1 = np.argmax(hand_freqs)
+
+    for hand in combinations(hand2, 5):
+        
+        #check for quads
+        hand_freqs = [card % 10 for card in hand]
+
+        #convert to int 
+        hand_freqs = np.array(hand_freqs, dtype=int)    
+
+        hand_freqs = np.bincount(hand_freqs)
+        if 4 in hand_freqs:
+            if value2 > np.argmax(hand_freqs):
+                hand_2_same_cards = 4
+                value2 = np.argmax(hand_freqs)
+        elif 3 in hand_freqs:
+            if hand_2_same_cards < 3 or (hand_2_same_cards == 3 and value2 > np.argmax(hand_freqs)):
+                hand_2_same_cards = 3
+                value2 = np.argmax(hand_freqs)
+        elif 2 in hand_freqs:
+            if hand_2_same_cards < 2 or (hand_2_same_cards == 2 and value2 > np.argmax(hand_freqs)):
+                hand_2_same_cards = 2
+                value2 = np.argmax(hand_freqs)
+        else:
+            if hand_2_same_cards < 1 or (hand_2_same_cards == 1 and value2 > np.argmax(hand_freqs)):
+                hand_2_same_cards = 1
+                value2 = np.argmax(hand_freqs)
+
+    if value1 == 0:
+        valueName1 = "Ace"
+    elif value1 == 1:
+        valueName1 = "King"
+    elif value1 == 2:
+        valueName1 = "Queen"
+
+    if value2 == 0:
+        valueName2 = "Ace"
+    elif value2 == 1:
+        valueName2 = "King"
+    elif value2 == 2:
+        valueName2 = "Queen"
+
+    if hand_1_same_cards > hand_2_same_cards:
+        return 1
+    elif hand_1_same_cards < hand_2_same_cards:
+        return 2
+    else:
+        if value1 < value2:
+            return 1
+        elif value1 > value2:
+            return 2
+        else:
+            return 0
+
+def print_best_hand(agent, visibleCards):
+    #Quads > Trips > Two Pair > Pair > High Card
+
+    #N%10 = 0 => A, N%10 = 1 => K, N%10 = 2 =>Q
+    #N/10 = 0 => Spades, N/10 = 1 => Hearts, N/10 = 2 => Diamonds, N/10 = 3 =>Clubs 
+    #So 0 = Ace of Spades, 31 = King of Clubs, etc.
+    
+    #check combinations of 5 cards in hand + visible cards
+    hand1 = agent.getCards()
+    hand1 = np.append(hand1, visibleCards)
+
+    for i in range(len(hand1)):
+        print(cardToName(hand1[i]))
+
+    hand_1_same_cards = -1
+    value1 = -1
+
+    for hand in combinations(hand1, 5):
+        
+        #check for quads
+        hand_freqs = [card % 10 for card in hand]
+
+        #convert to int 
+        hand_freqs = np.array(hand_freqs, dtype=int) 
+
+        hand_freqs = np.bincount(hand_freqs)
+        if 4 in hand_freqs:
+            if value1 > np.argmax(hand_freqs):
+                hand_1_same_cards = 4
+                value1 = np.argmax(hand_freqs)
+        elif 3 in hand_freqs:
+            if hand_1_same_cards < 3 or (hand_1_same_cards == 3 and value1 > np.argmax(hand_freqs)):
+                hand_1_same_cards = 3
+                value1 = np.argmax(hand_freqs)
+        elif 2 in hand_freqs:
+            if hand_1_same_cards < 2 or (hand_1_same_cards == 2 and value1 > np.argmax(hand_freqs)):
+                hand_1_same_cards = 2
+                value1 = np.argmax(hand_freqs)
+        else:
+            if hand_1_same_cards < 1 or (hand_1_same_cards == 1 and value1 > np.argmax(hand_freqs)):
+                hand_1_same_cards = 1
+                value1 = np.argmax(hand_freqs)
+
+    if value1 == 0:
+        valueName1 = "Ace"
+    elif value1 == 1:
+        valueName1 = "King"
+    elif value1 == 2:
+        valueName1 = "Queen"
+
+
+    print(agent.getName() + " has " + str(hand_1_same_cards) + " " + valueName1 + "s")
+
+def calculateWinningProbability(agent, visibleCards):
+
+    games = 0
+    wins = 0
+    for hand in agent.possibleOpponentCards:
+        if calculateBestHand(agent.getCards(), hand, visibleCards) == 1:
+            wins += 1
+        games += 1
+
+    return wins/games
+    
+
+
 def main():
 
     #initialize deck and comunity cards
@@ -108,8 +272,8 @@ def main():
     agent0.setCards(agent0Cards)
     agent1.setCards(agent1Cards)
 
-    print(agent0.getName() + " has " + cardToName(agent0.getCards()[0]) + " and " + cardToName(agent0.getCards()[1]))
-    print(agent1.getName() + " has " + cardToName(agent1.getCards()[0]) + " and " + cardToName(agent1.getCards()[1]))
+    agent0.printCards()
+    agent1.printCards()
 
     # calculate possible opponent hands
     agent0.possibleOpponentCards = calculatePossibleOpponentHands(agent0.getCards(), visibleCards, deck)
@@ -157,7 +321,17 @@ def main():
 
     print(agent0.getName() + "'s opponent has " + str(len(agent0.possibleOpponentCards)) + " possible hands")
     print(agent1.getName() + "'s opponent has " + str(len(agent1.possibleOpponentCards)) + " possible hands")
+
+    #print best hand
+    print_best_hand(agent0, visibleCards)
+    print_best_hand(agent1, visibleCards)
                            
+    #calculate winning probability
+    agent0WinningProbability = calculateWinningProbability(agent0, visibleCards)
+    agent1WinningProbability = calculateWinningProbability(agent1, visibleCards)
+
+    print(agent0.getName() + "'s winning probability is " + str(agent0WinningProbability))
+    print(agent1.getName() + "'s winning probability is " + str(agent1WinningProbability))
 
     
 
