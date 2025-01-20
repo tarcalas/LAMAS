@@ -1,2 +1,11 @@
-# LAMAS
-Hello world!
+#LAMAS project
+by Nicola Magliocco (s5866111) Jiri Derks (s4003039), Barnabas Tarcali (s4360923) and Luca Borgogno (s4776178) 
+
+#Topic of the Project
+In our project, we analyse poker through the lens of epistemic logic. More specifically, we are interested in Texas hold ‘em. In this variant of poker, players start with two “hole cards” (cards that are face down, and only known to the player). As the game progresses, five cards will be revealed to the players (first three - also called the “flop”, then a single one - the “turn”, and lastly another single card - the “river”).  During the course of the game players can place bets into the “pot” (collective of all placed bets in that round) in between the next set of cards are revealed. In doing this, players can bluff, and in doing so they implement ‘mixed strategies’.
+Our research question is: How does public announcement logic interplay with mixed strategies in strategic games with hidden information? 
+
+#Implementation
+To answer our research question, we will build a number of simulations of the subject game, with different levels of simplification.
+Firstly, we are going to restrict the game to fewer cards and no bluffing, with agents that follow pure strategies. This will greatly reduce the number of possible worlds in the Kripke model of the game. Then we will extend this to a full deck of cards. In the next step, we will include mixed strategies for the players (in the form of bluffing), but we will keep the number of betting rounds to one. Finally, we will have a simulation with the full four rounds of betting with agents that have different parameters in their mixed strategies. 
+All throughout the simulations, we assume that bets are a function of the goodness of the cards of the player placing the bet. Different hands will be given different scores based on the probability of reaching a stronger combination of cards. A ‘truthful’ bet will thus give information about one’s cards: the better the cards, the higher the bet. Moreover, we assume that, in a situation in which bluffing is possible, other players will update their beliefs based on a mixed strategy with two possible actions: believe or don’t believe. In the first case, they will assess the bet as truthful, while in the second they will consider it as a bluff. Our end goal is to model agents with different mixed strategies for both betting and assessing other people’s bets to see how they fare against each other.
