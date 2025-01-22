@@ -1,5 +1,6 @@
 import numpy as np
 from itertools import combinations
+import copy
 
 #I was thinking of representing the cards as numbers, with N%10 = 0 => A, N%10 = 1 => K, N%10 = 2 =>Q
 #N/10 = 0 => Spades, N/10 = 1 => Hearts, N/10 = 2 => Diamonds, N/10 = 3 =>Clubs 
@@ -253,9 +254,37 @@ def calculateWinningProbability(agent, visibleCards):
         games += 1
 
     return wins/games
+
+def calculateWinningProbabilityCards(myhand, opponentHands, visibleCards):
+    games = 0
+    wins = 0
+    for hand in opponentHands:
+        if calculateBestHand(myhand, hand, visibleCards) == 1:
+            wins += 1
+        games += 1
+
+    return wins/games
     
+def recalculatewinningProbability(agent, opponentPercentage, visibleCards, deck):
+    tmp_hands = copy.deepcopy(agent.possibleOpponentCards)
+
+    filtered_hands = []  # Create a new list to store valid hands
+
+    # For each hand that the opponent might have
+    for i in tmp_hands:
+
+        # Generate the opponents' thoughts about my possible hands
+        myPossibleHands = calculatePossibleOpponentHands(i, visibleCards, deck)
 
 
+        # Use the generated possible hands to calculate the probability of winning
+        percentage = calculateWinningProbabilityCards(i, myPossibleHands, visibleCards)
+        if percentage == opponentPercentage:
+            filtered_hands.append(i)  # Only add matching hands
+
+    return filtered_hands
+
+    
 def main():
 
     #initialize deck and comunity cards
@@ -333,7 +362,20 @@ def main():
     print(agent0.getName() + "'s winning probability is " + str(agent0WinningProbability))
     print(agent1.getName() + "'s winning probability is " + str(agent1WinningProbability))
 
-    
+    recalculatedHands0 = recalculatewinningProbability(agent0, agent1WinningProbability, visibleCards, deck)
+    recalculatedHands1 = recalculatewinningProbability(agent1, agent0WinningProbability, visibleCards, deck)
+
+    agent0.possibleOpponentCards = recalculatedHands0
+    agent1.possibleOpponentCards = recalculatedHands1
+
+    agent0WinningProbability = calculateWinningProbability(agent0, visibleCards)
+    agent1WinningProbability = calculateWinningProbability(agent1, visibleCards)
+
+    print(agent0.getName() + "'s winning probability is " + str(agent0WinningProbability))
+    print(agent1.getName() + "'s winning probability is " + str(agent1WinningProbability))
+
+
+
 
 
     
