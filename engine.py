@@ -123,7 +123,7 @@ def calculateBestHand(hand1, hand2, visibleCards):
 
         hand_freqs = np.bincount(hand_freqs)
         if 4 in hand_freqs:
-            if value1 > np.argmax(hand_freqs):
+            if hand_1_same_cards < 4 or(hand_1_same_cards == 3 and value1 > np.argmax(hand_freqs)):
                 hand_1_same_cards = 4
                 value1 = np.argmax(hand_freqs)
         elif 3 in hand_freqs:
@@ -149,7 +149,7 @@ def calculateBestHand(hand1, hand2, visibleCards):
 
         hand_freqs = np.bincount(hand_freqs)
         if 4 in hand_freqs:
-            if value2 > np.argmax(hand_freqs):
+            if hand_2_same_cards < 4 or(hand_2_same_cards == 3 and value2 > np.argmax(hand_freqs)):
                 hand_2_same_cards = 4
                 value2 = np.argmax(hand_freqs)
         elif 3 in hand_freqs:
@@ -201,7 +201,8 @@ def print_best_hand(agent, visibleCards):
     #check combinations of 5 cards in hand + visible cards
     hand1 = agent.getCards()
     hand1 = np.append(hand1, visibleCards)
-
+    print("\n")
+    print("The combined hand of " + agent.getName() + " is: ")
     for i in range(len(hand1)):
         print(cardToName(hand1[i]))
 
@@ -215,10 +216,10 @@ def print_best_hand(agent, visibleCards):
 
         #convert to int 
         hand_freqs = np.array(hand_freqs, dtype=int) 
-
+        
         hand_freqs = np.bincount(hand_freqs)
         if 4 in hand_freqs:
-            if value1 > np.argmax(hand_freqs):
+            if hand_1_same_cards < 4 or(hand_1_same_cards == 3 and value1 > np.argmax(hand_freqs)):
                 hand_1_same_cards = 4
                 value1 = np.argmax(hand_freqs)
         elif 3 in hand_freqs:
@@ -241,7 +242,7 @@ def print_best_hand(agent, visibleCards):
     elif value1 == 2:
         valueName1 = "Queen"
 
-
+    print("\nThe best combination of cards agnt"   + agent.getName() + " has is: ")
     print(agent.getName() + " has " + str(hand_1_same_cards) + " " + valueName1 + "s")
 
 def calculateWinningProbability(agent, visibleCards):
@@ -311,7 +312,11 @@ def main():
     print(agent0.getName() + "'s opponent has " + str(len(agent0.possibleOpponentCards)) + " possible hands")
     print(agent1.getName() + "'s opponent has " + str(len(agent1.possibleOpponentCards)) + " possible hands")
 
+    if input("Press enter to deal the flop...") == "exit":
+        return
+
     #deal flop
+    print("\nDealing the flop... ")
     for i in range(3):
         visibleCards = np.append(visibleCards, np.random.choice(restOfDeck))
         restOfDeck = np.delete(restOfDeck, np.where(restOfDeck == visibleCards[i]))
@@ -329,6 +334,10 @@ def main():
     visibleCards = np.append(visibleCards, np.random.choice(restOfDeck))
     restOfDeck = np.delete(restOfDeck, np.where(restOfDeck == visibleCards[3]))
 
+    if input("Press enter to deal the turn...") == "exit":
+        return
+
+    print("\nDealing the turn... ")
     print("Turn: " + cardToName(visibleCards[3]))
 
     # calculate possible opponent hands
@@ -342,6 +351,10 @@ def main():
     visibleCards = np.append(visibleCards, np.random.choice(restOfDeck))
     restOfDeck = np.delete(restOfDeck, np.where(restOfDeck == visibleCards[4]))
 
+    if input("Press enter to deal the river...") == "exit":
+        return
+
+    print("\nDealing the river... ")
     print("River: " + cardToName(visibleCards[4]))
 
     # calculate possible opponent hands
@@ -352,12 +365,19 @@ def main():
     print(agent1.getName() + "'s opponent has " + str(len(agent1.possibleOpponentCards)) + " possible hands")
 
     #print best hand
+
+    if input("Press enter to see the best hands...") == "exit":
+        return
+
     print_best_hand(agent0, visibleCards)
     print_best_hand(agent1, visibleCards)
                            
     #calculate winning probability
     agent0WinningProbability = calculateWinningProbability(agent0, visibleCards)
     agent1WinningProbability = calculateWinningProbability(agent1, visibleCards)
+
+    if input("Press enter to see the winning probabilities...") == "exit":
+        return
 
     print(agent0.getName() + "'s winning probability is " + str(agent0WinningProbability))
     print(agent1.getName() + "'s winning probability is " + str(agent1WinningProbability))
@@ -371,14 +391,22 @@ def main():
     agent0WinningProbability = calculateWinningProbability(agent0, visibleCards)
     agent1WinningProbability = calculateWinningProbability(agent1, visibleCards)
 
+    if input("Press enter to see the recalculated probabilities...") == "exit":
+        return
+
+    #print cards and possible opponent cards
+    print("\nAgent 0's recalculated possible opponent's cards: ")
+    for card in agent0.possibleOpponentCards:
+        print(cardToName(card[0]) + ", " + cardToName(card[1]))
+
+    print("\nAgent 1's recalculated possible opponent's cards: ")
+    for card in agent1.possibleOpponentCards:
+        print(cardToName(card[0]) + ", " + cardToName(card[1]))
+
     print(agent0.getName() + "'s winning probability is " + str(agent0WinningProbability))
     print(agent1.getName() + "'s winning probability is " + str(agent1WinningProbability))
 
 
-
-
-
-    
 
 if __name__ == "__main__":
     main()
