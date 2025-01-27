@@ -2,18 +2,14 @@ import numpy as np
 from itertools import combinations
 import copy
 
-#I was thinking of representing the cards as numbers, with N%10 = 0 => A, N%10 = 1 => K, N%10 = 2 =>Q
-#N/10 = 0 => Spades, N/10 = 1 => Hearts, N/10 = 2 => Diamonds, N/10 = 3 =>Clubs 
-#So 0 = Ace of Spades, 31 = King of Clubs, etc.
-
-#Also thinking about the different combinations as integers like 0 = 4 Aces, 1 = 4 Kings, etc.
-
-#calculates the probability of winning from an agents perspective
-# def probabilityOfWinning(agentsCards, visibleCards, agentsBestHand):
-#     return probability
-
-#deal cards
 def dealInitialCards(deck):
+    """
+    Deals the initial cards to the agents
+    params:
+        deck:   the deck of cards
+    """
+
+
     agent0Cards = np.array([])
     agent1Cards = np.array([])
     restOfDeck = deck
@@ -36,11 +32,14 @@ def dealInitialCards(deck):
 
     return (agent0Cards, agent1Cards, restOfDeck)
 
-#recursive approach is probably the best
-# def bestHand(agentsCards, visibleCards, pickedCards):
-#     return bestHandValue
-
 def cardToName(card):
+    """
+    Prints the name of a card
+    params:
+        card:   the card to print the name of
+    """
+
+
     suit = int(card/10)
     value = card%10
 
@@ -81,6 +80,14 @@ class Agent:
         print(self.name + " has " + cardToName(self.cards[0]) + " and " + cardToName(self.cards[1]))
 
 def calculatePossibleOpponentHands(agentsCards, visibleCards, deck):
+    """
+    Calculates the possible hands of the opponent given the cards of the agent and the visible cards
+    params: 
+        agentsCards:    the cards of the agent
+        visibleCards:   the cards that are visible
+        deck:           the deck of cards
+    """
+
     possibleOpponentCards = []
 
     for i in range(len(deck)):
@@ -98,12 +105,13 @@ def calculatePossibleOpponentHands(agentsCards, visibleCards, deck):
     return possibleOpponentCards
 
 def calculateBestHand(hand1, hand2, visibleCards):
-    #Quads > Trips > Two Pair > Pair > High Card
-
-    #N%10 = 0 => A, N%10 = 1 => K, N%10 = 2 =>Q
-    #N/10 = 0 => Spades, N/10 = 1 => Hearts, N/10 = 2 => Diamonds, N/10 = 3 =>Clubs 
-    #So 0 = Ace of Spades, 31 = King of Clubs, etc.
-    
+    """
+    Calculates the best hand between two agents, used for comparison for winning
+    params: 
+        hand1:          the hand of the first agent
+        hand2:          the hand of the second agent
+        visibleCards:   the cards that are visible
+    """
     #check combinations of 5 cards in hand + visible cards
     hand1 = np.append(hand1, visibleCards)
     hand2 = np.append(hand2, visibleCards)
@@ -192,11 +200,12 @@ def calculateBestHand(hand1, hand2, visibleCards):
             return 0
 
 def print_best_hand(agent, visibleCards):
-    #Quads > Trips > Two Pair > Pair > High Card
-
-    #N%10 = 0 => A, N%10 = 1 => K, N%10 = 2 =>Q
-    #N/10 = 0 => Spades, N/10 = 1 => Hearts, N/10 = 2 => Diamonds, N/10 = 3 =>Clubs 
-    #So 0 = Ace of Spades, 31 = King of Clubs, etc.
+    """
+    prints the best hand of an agent
+    params: 
+        agent:          the agent to print the best hand for
+        visibleCards:   the cards that are visible
+    """
     
     #check combinations of 5 cards in hand + visible cards
     hand1 = agent.getCards()
@@ -246,6 +255,12 @@ def print_best_hand(agent, visibleCards):
     print(agent.getName() + " has " + str(hand_1_same_cards) + " " + valueName1 + "s")
 
 def calculateWinningProbability(agent, visibleCards):
+    """
+    Calculates the probability of winning given the possible hands of the opponent
+    params: 
+        agent:          the agent to calculate the probability for
+        visibleCards:   the cards that are visible
+    """
 
     games = 0
     wins = 0
@@ -257,6 +272,13 @@ def calculateWinningProbability(agent, visibleCards):
     return wins/games
 
 def calculateWinningProbabilityCards(myhand, opponentHands, visibleCards):
+    """
+    Calculates the probability of winning given the possible hands of the opponent
+    params: 
+        myhand:             the hand of the agent
+        opponentHands:      the possible hands of the opponent
+        visibleCards:       the cards that are visible
+    """
     games = 0
     wins = 0
     for hand in opponentHands:
@@ -266,7 +288,17 @@ def calculateWinningProbabilityCards(myhand, opponentHands, visibleCards):
 
     return wins/games
     
-def recalculatewinningProbability(agent, opponentPercentage, visibleCards, deck):
+def recalculateHandsWithProbability(agent, opponentPercentage, visibleCards, deck):
+    """
+    Recalculates the possible hands of the opponent given the probability of winning
+    params: 
+        agent:                  the agent to recalculate the hands for
+        opponentPercentage:     the probability of the opponent winning
+        visibleCards:           the cards that are visible
+        deck:                   the deck of cards
+    """
+
+
     tmp_hands = copy.deepcopy(agent.possibleOpponentCards)
 
     filtered_hands = []  # Create a new list to store valid hands
@@ -386,8 +418,8 @@ def main():
     print(agent0.getName() + "'s winning probability is " + str(agent0WinningProbability))
     print(agent1.getName() + "'s winning probability is " + str(agent1WinningProbability))
 
-    recalculatedHands0 = recalculatewinningProbability(agent0, agent1WinningProbability, visibleCards, deck)
-    recalculatedHands1 = recalculatewinningProbability(agent1, agent0WinningProbability, visibleCards, deck)
+    recalculatedHands0 = recalculateHandsWithProbability(agent0, agent1WinningProbability, visibleCards, deck)
+    recalculatedHands1 = recalculateHandsWithProbability(agent1, agent0WinningProbability, visibleCards, deck)
 
     agent0.possibleOpponentCards = recalculatedHands0
     agent1.possibleOpponentCards = recalculatedHands1
