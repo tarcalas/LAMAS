@@ -1,6 +1,7 @@
 import numpy as np
 from itertools import combinations
 import copy
+import sys
 
 def dealInitialCards(deck):
     """
@@ -58,6 +59,12 @@ def cardToName(card):
         valueName = "King"
     elif value == 2:
         valueName = "Queen"
+    elif value == 3:
+        valueName = "Jack"
+    elif value == 4:
+        valueName = "10"
+    elif value == 5:
+        valueName = "9"
 
     return valueName + " of " + suitName
 
@@ -250,6 +257,12 @@ def print_best_hand(agent, visibleCards):
         valueName1 = "King"
     elif value1 == 2:
         valueName1 = "Queen"
+    elif value1 == 3:
+        valueName1 = "Jack"
+    elif value1 == 4:
+        valueName1 = "10"
+    elif value1 == 5:
+        valueName1 = "9"
 
     print("\nThe best combination of cards "   + agent.getName() + " has is: ")
     print(agent.getName() + " has " + str(hand_1_same_cards) + " " + valueName1 + "s")
@@ -317,14 +330,59 @@ def recalculateHandsWithProbability(agent, opponentPercentage, visibleCards, dec
 
     return filtered_hands
 
+def reclaculateHandsWithProbabilityThreshold(agent, opponentPercentage, visibleCards, deck):
+    """
+    Recalculates the possible hands of the opponent given the probability of winning
+    params: 
+        agent:                  the agent to recalculate the hands for
+        opponentPercentage:     the probability of the opponent winning
+        visibleCards:           the cards that are visible
+        deck:                   the deck of cards
+    """
+
+    threshold = 0.5
+    if opponentPercentage > threshold:
+        high = True
+    else:
+        high = False
+        
+    tmp_hands = copy.deepcopy(agent.possibleOpponentCards)
+
+    filtered_hands = []  # Create a new list to store valid hands
+
+    # For each hand that the opponent might have
+    for i in tmp_hands:
+
+        # Generate the opponents' thoughts about my possible hands
+        myPossibleHands = calculatePossibleOpponentHands(i, visibleCards, deck)
+
+        # Use the generated possible hands to calculate the probability of winning
+        percentage = calculateWinningProbabilityCards(i, myPossibleHands, visibleCards)
+        if percentage > threshold:
+            calculated_high = True
+        else:
+            calculated_high = False
+
+        if calculated_high == high:
+            filtered_hands.append(i)  # Only add matching hands
+
+    return filtered_hands
     
 def main():
-    #set random seed for demo
-    np.random.seed(3)
+
+    #argument for seed 
+    if "seed" in sys.argv:
+        seed = sys.argv[sys.argv.index("seed") + 1]
+        np.random.seed(int(seed))
+
 
     #initialize deck and comunity cards
     deck = np.array([0,1,2,10,11,12,20,21,22,30,31,32])
     visibleCards = np.array([])
+
+    #extended deck
+    if "extended" in sys.argv:
+        deck = np.append(deck, [3,4,5,13,14,15,23,24,25,33,34,35])
 
     # initialize agents
     agent0 = Agent("Agent 0")
@@ -418,8 +476,8 @@ def main():
     print(agent0.getName() + "'s winning probability is " + str(agent0WinningProbability))
     print(agent1.getName() + "'s winning probability is " + str(agent1WinningProbability))
 
-    recalculatedHands0 = recalculateHandsWithProbability(agent0, agent1WinningProbability, visibleCards, deck)
-    recalculatedHands1 = recalculateHandsWithProbability(agent1, agent0WinningProbability, visibleCards, deck)
+    recalculatedHands0 = reclaculateHandsWithProbabilityThreshold(agent0, agent1WinningProbability, visibleCards, deck)
+    recalculatedHands1 = reclaculateHandsWithProbabilityThreshold(agent1, agent0WinningProbability, visibleCards, deck)
 
     agent0.possibleOpponentCards = recalculatedHands0
     agent1.possibleOpponentCards = recalculatedHands1
