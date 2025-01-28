@@ -180,20 +180,6 @@ def calculateBestHand(hand1, hand2, visibleCards):
                 hand_2_same_cards = 1
                 value2 = np.argmax(hand_freqs)
 
-    if value1 == 0:
-        valueName1 = "Ace"
-    elif value1 == 1:
-        valueName1 = "King"
-    elif value1 == 2:
-        valueName1 = "Queen"
-
-    if value2 == 0:
-        valueName2 = "Ace"
-    elif value2 == 1:
-        valueName2 = "King"
-    elif value2 == 2:
-        valueName2 = "Queen"
-
     if hand_1_same_cards > hand_2_same_cards:
         return 1
     elif hand_1_same_cards < hand_2_same_cards:
@@ -282,6 +268,9 @@ def calculateWinningProbability(agent, visibleCards):
             wins += 1
         games += 1
 
+    if games == 0:
+        return 0
+
     return wins/games
 
 def calculateWinningProbabilityCards(myhand, opponentHands, visibleCards):
@@ -299,52 +288,22 @@ def calculateWinningProbabilityCards(myhand, opponentHands, visibleCards):
             wins += 1
         games += 1
 
+    if games == 0:
+        return 0
+    
     return wins/games
     
-def recalculateHandsWithProbability(agent, opponentPercentage, visibleCards, deck):
+def reclaculateHandsWithProbabilityDiscrete(agent, opponentPercentage, visibleCards, deck):
+
     """
     Recalculates the possible hands of the opponent given the probability of winning
+    This function rounds to the nearest 0.1, thus modeling 10 atoms each representing 0.1 probability
     params: 
         agent:                  the agent to recalculate the hands for
         opponentPercentage:     the probability of the opponent winning
         visibleCards:           the cards that are visible
         deck:                   the deck of cards
     """
-
-
-    tmp_hands = copy.deepcopy(agent.possibleOpponentCards)
-
-    filtered_hands = []  # Create a new list to store valid hands
-
-    # For each hand that the opponent might have
-    for i in tmp_hands:
-
-        # Generate the opponents' thoughts about my possible hands
-        myPossibleHands = calculatePossibleOpponentHands(i, visibleCards, deck)
-
-
-        # Use the generated possible hands to calculate the probability of winning
-        percentage = calculateWinningProbabilityCards(i, myPossibleHands, visibleCards)
-        if percentage == opponentPercentage:
-            filtered_hands.append(i)  # Only add matching hands
-
-    return filtered_hands
-
-def reclaculateHandsWithProbabilityThreshold(agent, opponentPercentage, visibleCards, deck):
-    """
-    Recalculates the possible hands of the opponent given the probability of winning
-    params: 
-        agent:                  the agent to recalculate the hands for
-        opponentPercentage:     the probability of the opponent winning
-        visibleCards:           the cards that are visible
-        deck:                   the deck of cards
-    """
-
-    threshold = 0.5
-    if opponentPercentage > threshold:
-        high = True
-    else:
-        high = False
         
     tmp_hands = copy.deepcopy(agent.possibleOpponentCards)
 
@@ -358,12 +317,8 @@ def reclaculateHandsWithProbabilityThreshold(agent, opponentPercentage, visibleC
 
         # Use the generated possible hands to calculate the probability of winning
         percentage = calculateWinningProbabilityCards(i, myPossibleHands, visibleCards)
-        if percentage > threshold:
-            calculated_high = True
-        else:
-            calculated_high = False
 
-        if calculated_high == high:
+        if round(percentage, 1) == round(opponentPercentage, 1):
             filtered_hands.append(i)  # Only add matching hands
 
     return filtered_hands
@@ -476,17 +431,40 @@ def main():
     print(agent0.getName() + "'s winning probability is " + str(agent0WinningProbability))
     print(agent1.getName() + "'s winning probability is " + str(agent1WinningProbability))
 
-    recalculatedHands0 = reclaculateHandsWithProbabilityThreshold(agent0, agent1WinningProbability, visibleCards, deck)
-    recalculatedHands1 = reclaculateHandsWithProbabilityThreshold(agent1, agent0WinningProbability, visibleCards, deck)
+    print("\n")
+    if input("Press enter to see the recalculated probabilities...") == "exit":
+        return
+    
+    oldAgent0WinningProbability = agent0WinningProbability
+    oldAgent1WinningProbability = agent1WinningProbability
+
+    recalculatedHands0 = reclaculateHandsWithProbabilityDiscrete(agent0, agent1WinningProbability, visibleCards, deck)
+    recalculatedHands1 = reclaculateHandsWithProbabilityDiscrete(agent1, agent0WinningProbability, visibleCards, deck)
 
     agent0.possibleOpponentCards = recalculatedHands0
     agent1.possibleOpponentCards = recalculatedHands1
 
     agent0WinningProbability = calculateWinningProbability(agent0, visibleCards)
     agent1WinningProbability = calculateWinningProbability(agent1, visibleCards)
+
+    steps_to_convergence = 1
+
+    while (oldAgent0WinningProbability != agent0WinningProbability or oldAgent1WinningProbability != agent1WinningProbability) and steps_to_convergence < 100 and (agent0WinningProbability != 0 and agent1WinningProbability != 0):
+        steps_to_convergence += 1
+        recalculatedHands0 = reclaculateHandsWithProbabilityDiscrete(agent0, agent1WinningProbability, visibleCards, deck)
+        recalculatedHands1 = reclaculateHandsWithProbabilityDiscrete(agent1, agent0WinningProbability, visibleCards, deck)
+
+        agent0.possibleOpponentCards = recalculatedHands0
+        agent1.possibleOpponentCards = recalculatedHands1
+
+        oldAgent0WinningProbability = agent0WinningProbability
+        oldAgent1WinningProbability = agent1WinningProbability
+
+        agent0WinningProbability = calculateWinningProbability(agent0, visibleCards)
+        agent1WinningProbability = calculateWinningProbability(agent1, visibleCards)
+    
     print("\n")
-    if input("Press enter to see the recalculated probabilities...") == "exit":
-        return
+    print("Converged in " + str(steps_to_convergence) + " steps")
 
     #print cards and possible opponent cards
     print("\nAgent 0's recalculated possible opponent's cards: ")
